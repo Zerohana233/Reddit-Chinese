@@ -2,6 +2,7 @@
 // @name         Reddit Chinese UI
 // @namespace    https://github.com/
 // @version      1.1.0
+// @version      1.0.0
 // @description  Localize Reddit web UI to Simplified Chinese using a predefined dictionary while ignoring user-generated content.
 // @author       OpenAI
 // @match        *://www.reddit.com/*
@@ -37,6 +38,7 @@
         "Create Community": "创建社区",
         "Create a community": "创建社区",
         "Start a community": "开始一个社区",
+        "Create Community": "创建社区",
         "Create Post": "创建帖子",
         "Create Community Now": "立即创建社区",
         "Notifications": "通知",
@@ -368,6 +370,9 @@
                     translated = fallbackCaseInsensitive;
                 }
             }
+        // Fallback to lookup that ignores surrounding whitespace
+        if (translated === original && translationMap[trimmed]) {
+            translated = translationMap[trimmed];
         }
 
         if (translated !== original) {
@@ -429,6 +434,9 @@
     function observeRoot(root) {
         if (!root || observedRoots.has(root)) return;
 
+     * Initialize a MutationObserver to translate newly added nodes in the SPA environment.
+     */
+    function initObserver() {
         const observer = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
                 mutation.addedNodes.forEach((node) => {
@@ -444,6 +452,15 @@
 
         observer.observe(root, { childList: true, subtree: true });
         observedRoots.add(root);
+                    } else {
+                        translateNode(node);
+                    }
+                });
+            }
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+        return observer;
     }
 
     /**
@@ -457,6 +474,8 @@
 
         translateNodeWithShadows(document.body);
         observeRoot(document.body);
+        translateNode(document.body);
+        initObserver();
     }
 
     startTranslation();
