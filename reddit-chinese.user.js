@@ -33,6 +33,10 @@
         "Search": "搜索",
         "Search Reddit": "搜索 Reddit",
         "Communities": "社区",
+        "Community": "社区",
+        "Create Community": "创建社区",
+        "Create a community": "创建社区",
+        "Start a community": "开始一个社区",
         "Create Community": "创建社区",
         "Create Post": "创建帖子",
         "Create Community Now": "立即创建社区",
@@ -42,6 +46,13 @@
         "All Communities": "所有社区",
         "More": "更多",
         "Moderation": "管理",
+        "Answers": "问答",
+        "Answers BETA": "问答（测试版）",
+        "Resources": "资源",
+        "Games on Reddit": "Reddit 游戏",
+        "Custom Feeds": "自定义订阅",
+        "Create Custom Feed": "创建自定义订阅",
+        "Recent": "最近",
 
         // User menu and settings
         "My Profile": "我的个人资料",
@@ -179,6 +190,11 @@
         "User Agreement": "用户协议",
         "Content Policy": "内容政策",
         "Moderator Code of Conduct": "管理员行为准则",
+        "About Reddit": "关于 Reddit",
+        "Advertise": "广告合作",
+        "Developer Platform": "开发者平台",
+        "Reddit Pro": "Reddit 专业版",
+        "Blog": "博客",
         "Back": "返回",
         "Forward": "前进",
         "View all": "查看全部",
@@ -226,6 +242,13 @@
         "Wiki": "百科",
         "Events": "活动"
     };
+
+    /**
+     * A lowercase lookup version of translationMap for case-insensitive matching.
+     */
+    const translationMapLower = Object.fromEntries(
+        Object.entries(translationMap).map(([key, value]) => [key.toLowerCase(), value])
+    );
 
     /**
      * Partial translation rules for dynamic text containing numbers or variable units.
@@ -321,6 +344,12 @@
             return;
         }
 
+        const caseInsensitiveMatch = translationMapLower[trimmed.toLowerCase()];
+        if (caseInsensitiveMatch) {
+            node.nodeValue = caseInsensitiveMatch;
+            return;
+        }
+
         let translated = original;
         partialTranslationRules.forEach(({ regex, replacement }) => {
             translated = translated.replace(regex, replacement);
@@ -330,6 +359,16 @@
             translated = translated.replace(regex, replacement);
         });
 
+        // Fallback to lookup that ignores surrounding whitespace and case
+        if (translated === original) {
+            if (translationMap[trimmed]) {
+                translated = translationMap[trimmed];
+            } else {
+                const fallbackCaseInsensitive = translationMapLower[trimmed.toLowerCase()];
+                if (fallbackCaseInsensitive) {
+                    translated = fallbackCaseInsensitive;
+                }
+            }
         // Fallback to lookup that ignores surrounding whitespace
         if (translated === original && translationMap[trimmed]) {
             translated = translationMap[trimmed];
