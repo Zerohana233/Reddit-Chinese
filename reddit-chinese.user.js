@@ -1,6 +1,7 @@
 // ==UserScript==
 // @name         Reddit Chinese UI
 // @namespace    https://github.com/
+// @version      1.1.0
 // @version      1.0.0
 // @description  Localize Reddit web UI to Simplified Chinese using a predefined dictionary while ignoring user-generated content.
 // @author       OpenAI
@@ -402,6 +403,37 @@
     }
 
     /**
+     * Track observed roots to avoid attaching duplicate MutationObservers.
+     */
+    const observedRoots = new WeakSet();
+
+    /**
+     * Translate a node and recursively handle any shadow roots under it.
+     */
+    function translateNodeWithShadows(root) {
+        translateNode(root);
+
+        if (root.querySelectorAll) {
+            root.querySelectorAll("*").forEach((el) => {
+                if (el.shadowRoot) {
+                    translateNode(el.shadowRoot);
+                    observeRoot(el.shadowRoot);
+                }
+            });
+        }
+
+        if (root.shadowRoot) {
+            translateNode(root.shadowRoot);
+            observeRoot(root.shadowRoot);
+        }
+    }
+
+    /**
+     * Initialize a MutationObserver on a given root to translate newly added nodes, including shadow DOM.
+     */
+    function observeRoot(root) {
+        if (!root || observedRoots.has(root)) return;
+
      * Initialize a MutationObserver to translate newly added nodes in the SPA environment.
      */
     function initObserver() {
@@ -410,6 +442,16 @@
                 mutation.addedNodes.forEach((node) => {
                     if (node.nodeType === Node.TEXT_NODE) {
                         translateTextNode(node);
+                        return;
+                    }
+
+                    translateNodeWithShadows(node);
+                });
+            }
+        });
+
+        observer.observe(root, { childList: true, subtree: true });
+        observedRoots.add(root);
                     } else {
                         translateNode(node);
                     }
@@ -429,6 +471,9 @@
             requestAnimationFrame(startTranslation);
             return;
         }
+
+        translateNodeWithShadows(document.body);
+        observeRoot(document.body);
         translateNode(document.body);
         initObserver();
     }
