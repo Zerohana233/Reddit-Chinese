@@ -37,6 +37,7 @@
         "Create Community": "创建社区",
         "Create a community": "创建社区",
         "Start a community": "开始一个社区",
+        "Create Community": "创建社区",
         "Create Post": "创建帖子",
         "Create Community Now": "立即创建社区",
         "Notifications": "通知",
@@ -368,6 +369,9 @@
                     translated = fallbackCaseInsensitive;
                 }
             }
+        // Fallback to lookup that ignores surrounding whitespace
+        if (translated === original && translationMap[trimmed]) {
+            translated = translationMap[trimmed];
         }
 
         if (translated !== original) {
